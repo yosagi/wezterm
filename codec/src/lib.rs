@@ -442,7 +442,15 @@ macro_rules! pdu {
 /// The overall version of the codec.
 /// This must be bumped when backwards incompatible changes
 /// are made to the types and protocol.
-pub const CODEC_VERSION: usize = 45;
+///
+/// patched fork: upstream codec version * 1000 + local revision.
+/// Only equality is checked on connect, so this keeps patched builds from
+/// silently talking to upstream builds (or older patched builds) whose wire
+/// format differs. Bump the local revision whenever a patch or an upstream
+/// merge changes the wire format; move to the new base when upstream bumps.
+/// 45_001: user_vars in GetPaneRenderChangesResponse + upstream #7385
+///         (Pattern::CaseSmartString inserted before Regex).
+pub const CODEC_VERSION: usize = 45_001;
 
 // Defines the Pdu enum.
 // Each struct has an explicit identifying number.

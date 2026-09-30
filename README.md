@@ -9,6 +9,7 @@ This is a personal fork with the following bug-fix patches applied on the `patch
 | `fix/focus-reconcile-storm` | [#4390](https://github.com/wezterm/wezterm/issues/4390) | Focus event storm / infinite loop fix (from fculpo, [PR #7763](https://github.com/wezterm/wezterm/pull/7763)) |
 | `fix/2056-ime-selected-string` | [#2056](https://github.com/wezterm/wezterm/pull/2056) | IME pre-edit text highlight (from kumattau) |
 | `fix/make-all-stale-unbounded-cache` | [#7363](https://github.com/wezterm/wezterm/issues/7363) | Unbounded LruCache memory leak fix ([PR #7704](https://github.com/wezterm/wezterm/pull/7704)) |
+| `fix/attach-window-size` | [#6826](https://github.com/wezterm/wezterm/issues/6826) | Window stuck at 80x24 when attaching to a fast (e.g. unix) domain |
 
 ## Branch structure
 
@@ -23,7 +24,7 @@ git checkout patched
 cargo build --release
 ```
 
-Pre-built binaries (Windows + Ubuntu 22.04) can be generated via Actions → "Build patched" → Run workflow.
+Pre-built binaries (Windows, Ubuntu 22.04 / 26.04 x86_64, Ubuntu 20.04 / 24.04 aarch64) can be generated via Actions → "Build patched" → Run workflow.
 
 ---
 

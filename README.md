@@ -5,11 +5,11 @@ This is a personal fork with the following bug-fix patches applied on the `patch
 | Branch | Issue/PR | Description |
 |--------|----------|-------------|
 | `fix/5117-pane-size-corruption` | [#5117](https://github.com/wezterm/wezterm/issues/5117) | Pane size corruption on mux client detach |
-| `fix/5832-user-vars-mux-sync` | [#5832](https://github.com/wezterm/wezterm/issues/5832) | user_vars not synced on mux reconnect |
-| `fix/focus-reconcile-storm` | [#4390](https://github.com/wezterm/wezterm/issues/4390) | Focus event storm / infinite loop fix (from fculpo, [PR #7763](https://github.com/wezterm/wezterm/pull/7763)) |
-| `fix/2056-ime-selected-string` | [#2056](https://github.com/wezterm/wezterm/pull/2056) | IME pre-edit text highlight (from kumattau) |
-| `fix/make-all-stale-unbounded-cache` | [#7363](https://github.com/wezterm/wezterm/issues/7363) | Unbounded LruCache memory leak fix ([PR #7704](https://github.com/wezterm/wezterm/pull/7704)) |
-| `fix/attach-window-size` | [#6826](https://github.com/wezterm/wezterm/issues/6826) | Window stuck at 80x24 when attaching to a fast (e.g. unix) domain |
+| `fix/5832-user-vars-mux-sync` | [#5832](https://github.com/wezterm/wezterm/issues/5832), [PR #7610](https://github.com/wezterm/wezterm/pull/7610) | user_vars not synced on mux reconnect |
+| `fix/focus-reconcile-storm` | [#4390](https://github.com/wezterm/wezterm/issues/4390), [PR #7763](https://github.com/wezterm/wezterm/pull/7763) | Focus event storm / infinite loop fix (from fculpo) |
+| `fix/2056-ime-selected-string` | [PR #2056](https://github.com/wezterm/wezterm/pull/2056) | IME pre-edit text highlight (from kumattau) |
+| `fix/make-all-stale-unbounded-cache` | [#7363](https://github.com/wezterm/wezterm/issues/7363), [PR #7704](https://github.com/wezterm/wezterm/pull/7704) | Unbounded LruCache memory leak fix |
+| `fix/attach-window-size` | [PR #8230](https://github.com/wezterm/wezterm/pull/8230) | Window stuck at 80x24 when attaching to a fast (e.g. unix) domain |
 
 ## Branch structure
 

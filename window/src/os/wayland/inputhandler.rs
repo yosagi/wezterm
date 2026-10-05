@@ -32,7 +32,10 @@ struct PendingState {
 /// for offsets outside the text, and for offsets that do not fall on a
 /// character boundary.
 fn byte_to_char_index(text: &str, byte: i32) -> Option<usize> {
-    let byte = usize::try_from(byte).ok()?;
+    if byte < 0 {
+        return None;
+    }
+    let byte = byte as usize;
     if byte > text.len() || !text.is_char_boundary(byte) {
         return None;
     }

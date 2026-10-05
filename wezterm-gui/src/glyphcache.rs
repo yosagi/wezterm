@@ -566,6 +566,8 @@ pub struct GlyphCache {
     line_glyphs: HashMap<LineKey, Sprite>,
     pub block_glyphs: HashMap<SizedBlockKey, Sprite>,
     pub cursor_glyphs: HashMap<(Option<CursorShape>, u8), Sprite>,
+    /// Marker drawn at the caret position inside IME composing text
+    pub composing_caret_glyph: Option<Sprite>,
     pub color: HashMap<(RgbColor, NotNan<f32>), Sprite>,
     min_frame_duration: Duration,
 }
@@ -589,6 +591,7 @@ impl GlyphCache {
             line_glyphs: HashMap::new(),
             block_glyphs: HashMap::new(),
             cursor_glyphs: HashMap::new(),
+            composing_caret_glyph: None,
             color: HashMap::new(),
             min_frame_duration: Duration::from_millis(1000 / fonts.config().max_fps as u64),
         })
@@ -618,6 +621,7 @@ impl GlyphCache {
             line_glyphs: HashMap::new(),
             block_glyphs: HashMap::new(),
             cursor_glyphs: HashMap::new(),
+            composing_caret_glyph: None,
             color: HashMap::new(),
             min_frame_duration: Duration::from_millis(1000 / fonts.config().max_fps as u64),
         })
@@ -695,6 +699,7 @@ impl GlyphCache {
         let config = self.fonts.config();
         self.image_cache.update_config(&config);
         self.cursor_glyphs.clear();
+        self.composing_caret_glyph = None;
     }
 
     /// Perform the load and render of a glyph

@@ -359,6 +359,7 @@ impl crate::TermWindow {
             };
 
             let ComputeCellFgBgResult {
+                fg_color: composing_fg_color,
                 cursor_shape,
                 cursor_border_color,
                 cursor_border_color_alt,
@@ -487,26 +488,28 @@ impl crate::TermWindow {
                 // method told us where it is. Quads are not clipped to the
                 // pane, so skip it when it falls beyond the right edge
                 // (the glyphs there are not drawn either).
+                //
+                // The marker is an hourglass centered on the cell boundary
+                // and drawn in the composing text color, so that the half
+                // overlapping the composing box stays visible even when the
+                // caret is at either end of the text.
                 if let Some(caret_col) = composing_caret_col {
                     let caret_x = (params.cursor.x + caret_col) as f32 * cell_width;
                     if caret_x < params.pixel_width {
-                        let mut quad = layers.allocate(2)?;
                         let x = pos_x + caret_col as f32 * cell_width;
-                        quad.set_position(x, pos_y, x + cell_width, pos_y + cell_height);
+                        let half = cell_width / 2.;
+                        let mut quad = layers.allocate(2)?;
+                        quad.set_position(x - half, pos_y, x + half, pos_y + cell_height);
                         quad.set_hsv(hsv);
                         quad.set_has_color(false);
                         quad.set_texture(
                             gl_state
                                 .glyph_cache
                                 .borrow_mut()
-                                .cursor_sprite(
-                                    Some(CursorShape::SteadyBar),
-                                    &params.render_metrics,
-                                    1,
-                                )?
+                                .composing_caret_sprite(&params.render_metrics)?
                                 .texture_coords(),
                         );
-                        quad.set_fg_color(params.cursor_fg);
+                        quad.set_fg_color(composing_fg_color);
                     }
                 }
             }

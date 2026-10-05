@@ -4750,6 +4750,66 @@ impl GlyphCache {
         Ok(sprite)
     }
 
+    /// Marker for the caret within IME composing text: an hourglass made of
+    /// a filled triangle at the top and bottom of the cell, joined by a
+    /// vertical stroke through the middle. The caller draws it centered on
+    /// the cell boundary where the caret sits (offset by half a cell), so
+    /// one half always overlaps the composing text and stays visible even
+    /// when the caret is at either end of it.
+    pub fn composing_caret_sprite(&mut self, metrics: &RenderMetrics) -> anyhow::Result<Sprite> {
+        if let Some(sprite) = &self.composing_caret_glyph {
+            return Ok(sprite.clone());
+        }
+
+        let mut buffer = Image::new(
+            metrics.cell_size.width as usize,
+            metrics.cell_size.height as usize,
+        );
+        let cell_rect = Rect::new(Point::new(0, 0), metrics.cell_size);
+        buffer.clear_rect(cell_rect, SrgbaPixel::rgba(0, 0, 0, 0));
+
+        self.draw_polys(
+            metrics,
+            &[
+                Poly {
+                    path: &[
+                        PolyCommand::MoveTo(BlockCoord::Frac(1, 8), BlockCoord::Zero),
+                        PolyCommand::LineTo(BlockCoord::Frac(7, 8), BlockCoord::Zero),
+                        PolyCommand::LineTo(BlockCoord::Frac(1, 2), BlockCoord::Frac(1, 3)),
+                        PolyCommand::Close,
+                    ],
+                    intensity: BlockAlpha::Full,
+                    style: PolyStyle::Fill,
+                },
+                Poly {
+                    path: &[
+                        PolyCommand::MoveTo(BlockCoord::Frac(1, 8), BlockCoord::One),
+                        PolyCommand::LineTo(BlockCoord::Frac(7, 8), BlockCoord::One),
+                        PolyCommand::LineTo(BlockCoord::Frac(1, 2), BlockCoord::Frac(2, 3)),
+                        PolyCommand::Close,
+                    ],
+                    intensity: BlockAlpha::Full,
+                    style: PolyStyle::Fill,
+                },
+                Poly {
+                    path: &[
+                        PolyCommand::MoveTo(BlockCoord::Frac(1, 2), BlockCoord::Frac(1, 3)),
+                        PolyCommand::LineTo(BlockCoord::Frac(1, 2), BlockCoord::Frac(2, 3)),
+                    ],
+                    intensity: BlockAlpha::Full,
+                    style: PolyStyle::Outline,
+                },
+            ],
+            &mut buffer,
+            PolyAA::AntiAlias,
+            BlendMode::default(),
+        );
+
+        let sprite = self.atlas.allocate(&buffer)?;
+        self.composing_caret_glyph.replace(sprite.clone());
+        Ok(sprite)
+    }
+
     pub fn block_sprite(
         &mut self,
         render_metrics: &RenderMetrics,

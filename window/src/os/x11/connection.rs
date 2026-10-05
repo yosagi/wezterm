@@ -909,7 +909,16 @@ impl XConnection {
                         }
                         let attr = if !attr.is_empty() { Some(attr) } else { None };
 
-                        let status = DeadKeyStatus::Composing(Composing { text, attr });
+                        // XIM reports the caret as an index into the characters
+                        // of the preedit text.
+                        let caret = info.caret() as usize;
+                        let cursor = if caret <= text.chars().count() {
+                            Some(caret)
+                        } else {
+                            None
+                        };
+
+                        let status = DeadKeyStatus::Composing(Composing { text, attr, cursor });
                         inner.dispatch_ime_compose_status(status);
                     }
                 });

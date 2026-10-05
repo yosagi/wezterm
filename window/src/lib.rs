@@ -152,6 +152,10 @@ pub struct Composing {
     pub text: String,
     /// Holding composing attribute of each unicode character in composing text
     pub attr: Option<Vec<ComposingAttribute>>,
+    /// Position of the caret within the composing text, as an index into
+    /// its unicode characters (0..=text.chars().count()).
+    /// None if the input method did not report one.
+    pub cursor: Option<usize>,
 }
 
 bitflags! {

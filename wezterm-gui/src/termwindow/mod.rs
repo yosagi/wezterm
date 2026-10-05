@@ -61,6 +61,7 @@ use std::rc::Rc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
+use termwiz::cell::unicode_column_width;
 use termwiz::hyperlink::Hyperlink;
 use termwiz::surface::SequenceNo;
 use wezterm_dynamic::Value;
@@ -2154,9 +2155,20 @@ impl TermWindow {
             };
             let (padding_left, padding_top) = self.padding_left_top();
 
+            // While composing, follow the caret within the preedit so that
+            // the input method places its candidate window next to the
+            // position being edited rather than at the start of the preedit.
+            let caret_cols = match &self.dead_key_status {
+                DeadKeyStatus::Composing(c) => {
+                    composing_cursor_column(&c.text, c.cursor).unwrap_or(0)
+                }
+                _ => 0,
+            };
+
             let r = Rect::new(
                 Point::new(
-                    (((cursor.x + pos.left) as isize).max(0) * self.render_metrics.cell_size.width)
+                    (((cursor.x + caret_cols + pos.left) as isize).max(0)
+                        * self.render_metrics.cell_size.width)
                         .add(padding_left as isize),
                     ((cursor.y + pos.top as isize - top).max(0)
                         * self.render_metrics.cell_size.height)
@@ -3664,4 +3676,18 @@ impl Drop for TermWindow {
             }
         }
     }
+}
+
+/// Column offset of the composing caret relative to the start of the
+/// composing text, or None if the input method didn't report a caret.
+/// `cursor` is an index into the unicode characters of `text`; an index
+/// past the end is treated as "after the last character".
+pub(crate) fn composing_cursor_column(text: &str, cursor: Option<usize>) -> Option<usize> {
+    let cursor = cursor?;
+    let byte = text
+        .char_indices()
+        .nth(cursor)
+        .map(|(b, _)| b)
+        .unwrap_or(text.len());
+    Some(unicode_column_width(&text[..byte], None))
 }

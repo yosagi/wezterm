@@ -2186,7 +2186,11 @@ unsafe fn ime_composition(
                 inner
                     .events
                     .dispatch(WindowEvent::AdviseDeadKeyStatus(DeadKeyStatus::Composing(
-                        Composing { text, attr },
+                        Composing {
+                            text,
+                            attr,
+                            cursor: None,
+                        },
                     )))
             }
         }
@@ -2816,6 +2820,7 @@ unsafe fn key(hwnd: HWND, msg: UINT, wparam: WPARAM, lparam: LPARAM) -> Option<L
                         DeadKeyStatus::Composing(Composing {
                             text: c.to_string(),
                             attr: None,
+                            cursor: None,
                         }),
                     ));
                     return Some(0);

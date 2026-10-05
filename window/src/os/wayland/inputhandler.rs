@@ -16,14 +16,46 @@ use wayland_protocols::wp::text_input::zv3::client::zwp_text_input_v3::{
 };
 use wezterm_input_types::{KeyCode, KeyEvent, KeyboardLedStatus, Modifiers};
 
-use crate::{Composing, DeadKeyStatus, WindowEvent};
+use crate::{Composing, ComposingAttribute, DeadKeyStatus, WindowEvent};
 
 use super::state::WaylandState;
 
 #[derive(Clone, Default, Debug)]
 struct PendingState {
-    pre_edit: Option<String>,
+    /// Pending preedit text with the cursor_begin / cursor_end byte offsets
+    pre_edit: Option<(String, i32, i32)>,
     commit: Option<String>,
+}
+
+/// Convert a byte offset reported by the compositor into an index into the
+/// unicode characters of `text`. Returns None for the "no cursor" marker (-1),
+/// for offsets outside the text, and for offsets that do not fall on a
+/// character boundary.
+fn byte_to_char_index(text: &str, byte: i32) -> Option<usize> {
+    let byte = usize::try_from(byte).ok()?;
+    if byte > text.len() || !text.is_char_boundary(byte) {
+        return None;
+    }
+    Some(text[..byte].chars().count())
+}
+
+/// Build the composing state from a text-input-v3 preedit_string event.
+/// `cursor_begin == cursor_end` marks the caret. A non-empty range is shown
+/// as the selected portion of the preedit; compositors such as KWin use it
+/// to convey the segment that is currently being converted.
+fn composing_from_preedit(text: String, cursor_begin: i32, cursor_end: i32) -> Composing {
+    let cursor = byte_to_char_index(&text, cursor_begin);
+    let attr = match (cursor, byte_to_char_index(&text, cursor_end)) {
+        (Some(begin), Some(end)) if end > begin => {
+            let mut attr = vec![ComposingAttribute::NONE; text.chars().count()];
+            for a in &mut attr[begin..end] {
+                *a = ComposingAttribute::SELECTED;
+            }
+            Some(attr)
+        }
+        _ => None,
+    };
+    Composing { text, attr, cursor }
 }
 
 pub(super) struct TextInputState {
@@ -166,10 +198,10 @@ impl Dispatch<ZwpTextInputV3, TextInputData, WaylandState> for TextInputState {
         match event {
             TextInputEvent::PreeditString {
                 text,
-                cursor_begin: _,
-                cursor_end: _,
+                cursor_begin,
+                cursor_end,
             } => {
-                pending_state.pre_edit = text;
+                pending_state.pre_edit = text.map(|text| (text, cursor_begin, cursor_end));
             }
             TextInputEvent::CommitString { text } => {
                 pending_state.commit = text;
@@ -189,8 +221,10 @@ impl Dispatch<ZwpTextInputV3, TextInputData, WaylandState> for TextInputState {
                         raw: None,
                     }));
                 }
-                let status = if let Some(text) = pending_state.pre_edit.take() {
-                    DeadKeyStatus::Composing(Composing { text, attr: None })
+                let status = if let Some((text, cursor_begin, cursor_end)) =
+                    pending_state.pre_edit.take()
+                {
+                    DeadKeyStatus::Composing(composing_from_preedit(text, cursor_begin, cursor_end))
                 } else {
                     DeadKeyStatus::None
                 };

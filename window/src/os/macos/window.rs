@@ -2133,7 +2133,11 @@ impl WindowView {
                     })
                     .collect(),
             );
-            inner.ime_composing = Composing { text, attr };
+            inner.ime_composing = Composing {
+                text,
+                attr,
+                cursor: None,
+            };
 
             // Show composition preview for dictation; see #4592
             let status = if s.is_empty() {
@@ -2660,6 +2664,7 @@ impl WindowView {
                             DeadKeyStatus::Composing(Composing {
                                 text: composing,
                                 attr: None,
+                                cursor: None,
                             }),
                         ));
 

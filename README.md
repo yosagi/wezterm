@@ -10,6 +10,7 @@ This is a personal fork with the following bug-fix patches applied on the `patch
 | `fix/2056-ime-selected-string` | [PR #2056](https://github.com/wezterm/wezterm/pull/2056) | IME pre-edit text highlight (from kumattau) |
 | `fix/make-all-stale-unbounded-cache` | [#7363](https://github.com/wezterm/wezterm/issues/7363), [PR #7704](https://github.com/wezterm/wezterm/pull/7704) | Unbounded LruCache memory leak fix |
 | `fix/attach-window-size` | [PR #8230](https://github.com/wezterm/wezterm/pull/8230) | Window stuck at 80x24 when attaching to a fast (e.g. unix) domain |
+| `fix/preedit-caret` | — | Show the IME caret inside the preedit (text-input-v3 cursor_begin / XIM caret) and let the candidate window follow it |
 
 ## Branch structure
 

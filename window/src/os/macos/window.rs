@@ -1922,7 +1922,11 @@ impl WindowView {
                     })
                     .collect(),
             );
-            inner.ime_composing = Composing { text, attr };
+            inner.ime_composing = Composing {
+                text,
+                attr,
+                cursor: None,
+            };
 
             /*
             let key_is_down = inner.key_is_down.take().unwrap_or(true);
@@ -2452,6 +2456,7 @@ impl WindowView {
                             DeadKeyStatus::Composing(Composing {
                                 text: composing,
                                 attr: None,
+                                cursor: None,
                             }),
                         ));
 

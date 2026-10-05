@@ -4,7 +4,7 @@ use crate::termwindow::render::{
     ComputeCellFgBgParams, ComputeCellFgBgResult, LineToElementParams, LineToElementShape,
     RenderScreenLineParams, RenderScreenLineResult,
 };
-use crate::termwindow::LineToElementShapeItem;
+use crate::termwindow::{composing_cursor_column, LineToElementShapeItem};
 use crate::Composing;
 use ::window::DeadKeyStatus;
 use anyhow::Context;
@@ -82,12 +82,16 @@ impl crate::TermWindow {
 
         let mut composing_text_width = 0;
         let mut composing_selections = vec![];
+        let mut composing_caret_col = None;
 
         // Referencing the text being composed, but only if it belongs to this pane
         if cursor_idx.is_some() {
             // Do we need to shape immediately, or can we use the pre-shaped data?
-            if let DeadKeyStatus::Composing(Composing { text, attr }) = &self.dead_key_status {
+            if let DeadKeyStatus::Composing(Composing { text, attr, cursor }) =
+                &self.dead_key_status
+            {
                 composing_text_width = unicode_column_width(text, None);
+                composing_caret_col = composing_cursor_column(text, *cursor);
 
                 if let Some(attr) = attr {
                     // convert SELECTED attr to selections
@@ -476,6 +480,33 @@ impl crate::TermWindow {
                         );
 
                         quad.set_fg_color(params.selection_bg);
+                    }
+                }
+
+                // Draw the caret within the composing text, if the input
+                // method told us where it is. Quads are not clipped to the
+                // pane, so skip it when it falls beyond the right edge
+                // (the glyphs there are not drawn either).
+                if let Some(caret_col) = composing_caret_col {
+                    let caret_x = (params.cursor.x + caret_col) as f32 * cell_width;
+                    if caret_x < params.pixel_width {
+                        let mut quad = layers.allocate(2)?;
+                        let x = pos_x + caret_col as f32 * cell_width;
+                        quad.set_position(x, pos_y, x + cell_width, pos_y + cell_height);
+                        quad.set_hsv(hsv);
+                        quad.set_has_color(false);
+                        quad.set_texture(
+                            gl_state
+                                .glyph_cache
+                                .borrow_mut()
+                                .cursor_sprite(
+                                    Some(CursorShape::SteadyBar),
+                                    &params.render_metrics,
+                                    1,
+                                )?
+                                .texture_coords(),
+                        );
+                        quad.set_fg_color(params.cursor_fg);
                     }
                 }
             }

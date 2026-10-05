@@ -324,7 +324,11 @@ impl KeyboardWithFallback {
                         text
                     );
                     events.dispatch(WindowEvent::AdviseDeadKeyStatus(DeadKeyStatus::Composing(
-                        Composing { text, attr: None },
+                        Composing {
+                            text,
+                            attr: None,
+                            cursor: None,
+                        },
                     )));
                     return None;
                 }

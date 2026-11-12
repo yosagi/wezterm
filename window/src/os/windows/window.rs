@@ -1548,6 +1548,38 @@ unsafe fn wm_enter_exit_size_move(
     Some(0)
 }
 
+/// With PerMonitorV2 awareness, Windows sends WM_DPICHANGED when the window
+/// moves to a monitor with a different DPI, along with a suggested new window
+/// rect (lparam). Apply that rect, as Windows expects us to.
+///
+/// The rect is positioned relative to the cursor so that the window stays on
+/// the new monitor. Without this, the gui layer resizes the window itself
+/// (anchored at the top-left) to preserve rows/cols, which can move the
+/// window back across the monitor boundary; the DPI then flips back and forth,
+/// and a resize computed for one DPI can land after the DPI has changed again,
+/// which the gui layer treats as a user resize and recomputes rows/cols.
+unsafe fn wm_dpichanged(hwnd: HWND, _msg: UINT, wparam: WPARAM, lparam: LPARAM) -> Option<LRESULT> {
+    let suggested = &*(lparam as *const RECT);
+    log::trace!(
+        "WM_DPICHANGED dpi {} suggested {},{} {}x{}",
+        LOWORD(wparam as u32),
+        suggested.left,
+        suggested.top,
+        rect_width(suggested),
+        rect_height(suggested)
+    );
+    SetWindowPos(
+        hwnd,
+        null_mut(),
+        suggested.left,
+        suggested.top,
+        rect_width(suggested),
+        rect_height(suggested),
+        SWP_NOZORDER | SWP_NOACTIVATE,
+    );
+    Some(0)
+}
+
 /// We handle WM_WINDOWPOSCHANGED and dispatch directly to our wm_size as it
 /// is a bit more efficient than letting DefWindowProcW parse this and
 /// trigger WM_SIZE.
@@ -2953,6 +2985,7 @@ unsafe fn do_wnd_proc(hwnd: HWND, msg: UINT, wparam: WPARAM, lparam: LPARAM) -> 
         WM_PAINT => wm_paint(hwnd, msg, wparam, lparam),
         WM_ENTERSIZEMOVE | WM_EXITSIZEMOVE => wm_enter_exit_size_move(hwnd, msg, wparam, lparam),
         WM_WINDOWPOSCHANGED => wm_windowposchanged(hwnd, msg, wparam, lparam),
+        WM_DPICHANGED => wm_dpichanged(hwnd, msg, wparam, lparam),
         WM_SETFOCUS => wm_set_focus(hwnd, msg, wparam, lparam),
         WM_KILLFOCUS => wm_kill_focus(hwnd, msg, wparam, lparam),
         WM_DEADCHAR | WM_KEYDOWN | WM_KEYUP | WM_SYSCHAR | WM_CHAR | WM_IME_CHAR | WM_SYSKEYUP
